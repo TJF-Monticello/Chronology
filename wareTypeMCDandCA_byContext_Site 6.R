@@ -163,7 +163,7 @@ WareByUnitT1 <- WareByUnitT1 [,colSums(WareByUnitT1[,-1]) > 0]
 
 #### 11. Define a function to Remove Types w/o Dates and a function to compute MCDs, ####
 # etc. 
-# 11.1 We build a function that removes types with no dates, either becauss they 
+# 11.1 We build a function that removes types with no dates, either because they 
 # have no dates in the MCD Ware Type Table or because they are not MCD Ware 
 # Types (e.g. they are CEW Types). This approach is useful because it returns a 
 # dataframe that contains ONLY types that went into the MCDs, which you may 
@@ -471,16 +471,16 @@ p5a <- p5 + geom_vline(xintercept=c(-4.1, -2), colour = "gray", linetype = "dash
 p5a
 
 # save the plot for website chronology page/presentations
-# ggsave("SEC_Histogram.png", p5a, width=10, height=7.5, dpi=300)
+# ggsave("Site6_Histogram.png", p5a, width=10, height=7.5, dpi=300)
 # 
 
 
 # create a vector for the phases with as many entries as assemblages
 Phase <- rep(NA, length(rowScores[,1])) 
 # do the phase assigments
-Phase[rowScores[,1] <= -4] <- 'P01'  
-Phase[(rowScores[,1] > -4) & (rowScores[,1]) <= -2] <- 'P02'
-Phase[rowScores[,1] >  -2] <- 'P03'
+Phase[rowScores[,1] <= -.4] <- 'P01'  
+#Phase[(rowScores[,1] > -.4) & (rowScores[,1]) <= -1.2] <- 'P02'
+Phase[rowScores[,1] >  -.4] <- 'P03'
 
 # assemble the results in a dataframe
 CA_MCD_Phase <-  cbind(MCDByUnit$MCDs,rowScores[,1:2],Phase)
@@ -513,12 +513,12 @@ MCDByPhase
 # BlueMCDByDim1 plot
 library(viridis)
 p6 <- ggplot(CA_MCD_Phase,aes(x = dim1Scores,y = blueMCD, fill= factor(Phase))) +
-  scale_y_continuous(limits=c(1800, 1890)) +
+  scale_y_continuous(limits=c(1760, 1920)) +
   geom_point(shape=21,  alpha = .75, size= 6)  + 
   scale_fill_viridis(discrete= T, name="DAACS Phase",
                      labels=c("P01", "P02", "P03")) + 
   geom_text_repel(aes(label= unit), cex=4) +
-  labs(title="Southeast Cabin", x="Dimension 1", y="BLUE MCD")
+  labs(title="Site 6", x="Dimension 1", y="BLUE MCD")
 p6
 
 
