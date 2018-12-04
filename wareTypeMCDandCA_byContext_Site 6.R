@@ -33,7 +33,7 @@ MCDTypeTable<- dbGetQuery(DRCcon,'
 
 
 
-csr1413<-dbGetQuery(DRCcon,'
+wareTypeData<-dbGetQuery(DRCcon,'
                          SELECT
                          "public"."tblCeramic"."Quantity",
                          "public"."tblCeramicWare"."Ware",
@@ -80,7 +80,7 @@ MCDTypeTable <- MCDTypeTable %>%
   )
 
 #### 5. Remove contexts with deposit type cleanup and surface collection ####
-wareTypeData <- subset(csr1413, ! csr1413$DepositType  %in%  c('Clean-Up/Out-of-Stratigraphic Context',
+wareTypeData <- subset(wareTypeData, ! wareTypeData$DepositType  %in%  c('Clean-Up/Out-of-Stratigraphic Context',
                                                                'Surface Collection'))
 
 
@@ -381,7 +381,7 @@ p1 <- ggplot(rowScores, aes(x=Dim1,y=Dim2))+
   geom_point(shape=21, size=5, colour="black", fill="cornflower blue")+
   #geom_text(aes(label= rownames(rowscores)),vjust=-.6, cex=5) +
   geom_text_repel(aes(label=rownames(rowScores)), cex = 4) +
-  labs(title="Southeast Cabin", x="Dimension 1", y="Dimension 2")
+  labs(title="Site 6", x="Dimension 1", y="Dimension 2")
 
 p1
 #save the plot for website chronology page/presentations
@@ -392,7 +392,7 @@ p2 <- ggplot(colScores, aes(x = Dim1,y = Dim2))+
   geom_point(shape=21, size=5, colour="black", fill="cornflower blue")+
   #geom_text(aes(label=CA_MCD_Phase1$unit),vjust=-.6, cex=5)+
   geom_text_repel(aes(label=rownames(colScores)), cex= 6) +
-  labs(title="Southeast Cabin", x="Dimension 1", y="Dimension 2") 
+  labs(title="Site 6", x="Dimension 1", y="Dimension 2") 
 
 p2
 #save the plot for website chronology page/presentations
@@ -425,7 +425,7 @@ p3 <- ggplot(rowScores, aes(x=rowScores$Dim1,y=MCDByUnit$MCDs$blueMCD))+
   geom_point(shape=21, size=5, colour="black", fill="cornflower blue")+
   #geom_text(aes(label=CA_MCD_Phase1$unit),vjust=-.6, cex=5)+
   #geom_text_repel(aes(label=rownames(rowscores)), cex=6) +
-  labs(title="Southeast Cabin", x="Dimension 1", y="BLUE MCD") 
+  labs(title="Site 6", x="Dimension 1", y="BLUE MCD") 
 p3 
 
 # save the plot for website chronology page/presentations
@@ -436,7 +436,7 @@ p4 <- ggplot(rowScores, aes(x=Dim2,y=MCDByUnit$MCDs$blueMCD))+
   geom_point(shape=21, size=5, colour="black", fill="cornflower blue")+
   #geom_text(aes(label=CA_MCD_Phase1$unit),vjust=-.6, cex=5)+
   # geom_text_repel(aes(label=rownames(rowscores)), cex=6) +
-  labs(title="Southeast Cabin", x="Dimension 2", y="BLUE MCD") 
+  labs(title="Site 6", x="Dimension 2", y="BLUE MCD") 
 p4 
 #ggsave("Site 6_Dim2BLUEMCD.png", p4, width=10, height=7.5, dpi=300)
 
@@ -459,7 +459,7 @@ p5 <- ggplot(dim1ForHist, aes(x = dim1)) +
    xlim(-9,3)+
   #stat_function(fun = dnorm, colour = "blue")+
   # scale_x_continuous(breaks=seq(-4, 2, 0.5), limits=c(-3.5,3))+
-  labs(title="Southeast Cabin", x="Dimension 1", y="Density")+
+  labs(title="Site 6", x="Dimension 1", y="Density")+
   geom_density(fill=NA)
 p5
 
