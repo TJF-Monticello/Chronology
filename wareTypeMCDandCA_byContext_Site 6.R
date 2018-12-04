@@ -66,10 +66,10 @@ wareTypeData<-dbGetQuery(DRCcon,'
 
 #### 3. Any customizations to the Ware Type dates should go here....####
 #Change end dates!!!!!!!!!!!
-MCDTypeTable$BeginDate[MCDTypeTable$Ware == 'Porcelain, Chinese']<-1700
-MCDTypeTable$EndDate[MCDTypeTable$Ware == 'Whiteware']<-1930
-MCDTypeTable$EndDate[MCDTypeTable$Ware == 'Ironstone/White Granite']<-1930
-MCDTypeTable$EndDate[MCDTypeTable$Ware == 'Porcelain, French']<-1930
+#MCDTypeTable$BeginDate[MCDTypeTable$Ware == 'Porcelain, Chinese']<-1700
+#MCDTypeTable$EndDate[MCDTypeTable$Ware == 'Whiteware']<-1930
+#MCDTypeTable$EndDate[MCDTypeTable$Ware == 'Ironstone/White Granite']<-1930
+#MCDTypeTable$EndDate[MCDTypeTable$Ware == 'Porcelain, French']<-1930
 
 
 #### 4. Compute new numeric date variables from original ones, which we will need to compute the MCDs####
@@ -97,7 +97,7 @@ summary1
 #wareTypeData$FeatureNumber[is.na(wareTypeData$FeatureNumber)] <- ''
 #wareTypeData$QuadratID[is.na(wareTypeData$QuadratID)] <- ''
 # Use case_when to cycle through QuadID, Feature, SG, and Context to assign aggregration unit
-#wareTypeData1 <- wareTypeData %>%  
+#wareTypeData_Unit <- wareTypeData %>%  
 #mutate( unit = case_when(
 #QuadratID == "" & FeatureNumber == "" & DAACSStratigraphicGroup == "" 
 #~ paste(Context),
@@ -113,13 +113,12 @@ summary1
 #~ paste(FeatureNumber,DAACSStratigraphicGroup)
 #))
 
-# # Check on the content of the unit variable
-table(wareTypeData1$unit)
+# Check on the content of the unit variable
+#table(wareTypeData_Unit$unit)
 
-#wareTypeData1$unit <- wareTypeData$Context  
-
-
+  
 #### 8. Remove specific contexts, groups of contexts, and ware types as needed ... ####
+#Note that if you used Step 7 to create an aggregation unit you may need to change the dataframe name that is used in this step to the dataframe name created in that step, e.g. wareTypeData_Unit
 # The Quad that was dug into a backflled quad
 wareTypeData1 <- filter(wareTypeData, ! wareTypeData$QuadratID   %in% 
                          c('082%'))
@@ -137,6 +136,8 @@ wareTypeData1 <- filter(wareTypeData, ! wareTypeData$QuadratID   %in%
 #                     'White Salt Glaze'))
 
 #### 9. Tranpose the data for the MCD and CA ####
+#Note that depending on what you removed in step 8 you may need to change the dataframe name that is used
+#for the group_by and sum from wareTypeData1 to wareTypeData2
 WareByUnit <- wareTypeData1 %>% group_by(Ware,unit) %>% 
   summarise(count = sum(Quantity))
 
