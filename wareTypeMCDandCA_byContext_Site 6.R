@@ -1,5 +1,3 @@
-setwd("P:/Quarter-44AB469/R code")
-
 # wareTypeCAandMCD.R
 # Establish a DBI connection to DAACS PostgreSQL database and submnit SQL queries
 # Created by:  FDN  8.5.2014
@@ -7,6 +5,7 @@ setwd("P:/Quarter-44AB469/R code")
 # Last update: LAB 9.5.2017 to add List of Contexts with Phase Assignments for database updates
 # Updated to just Site 6 CLP 11.16.2018
 # Tidy verion by FDN 11.26.2018
+# Adjustment to weighted part of the KDE plot and adding MCDs and tpqs by context by FDN 11.28.2018
 
 
 # load the libraries
@@ -18,110 +17,117 @@ library (plotrix)
 library(ggplot2)
 library(viridis)
 
+#Link to file with database password
+source("credentials.R")
 
-source(credentials.R)
-
-
-# 1. get the table with the ware type date ranges
+####1. get the table with the ware type date ranges####
 MCDTypeTable<- dbGetQuery(DRCcon,'
                           SELECT * 
                           FROM "tblCeramicWare"
                           ')
 
 
-# 2. submit a SQL query: note the use of \ as an escape sequence
+#### 2. submit a SQL query: note the use of \ as an escape sequence####
 # note the LEFT JOIN on the Feature table retains non-feature contexts
 # Fill in your ProjectID
 
 
 
 wareTypeData<-dbGetQuery(DRCcon,'
-  SELECT
-  "public"."tblCeramic"."Quantity",
-  "public"."tblCeramicWare"."Ware",
-  "public"."tblCeramicGenre"."CeramicGenre",
-  "public"."tblCeramicCEWType"."CeramicCEWType",
-  "public"."tblProjectName"."ProjectName",
-  "public"."tblContext"."ProjectID",
-  "public"."tblContext"."Context",
-  "public"."tblContextDepositType"."DepositType",
-  "public"."tblContext"."DAACSStratigraphicGroup",
-  "public"."tblContext"."MasterContextNumber",
-  "public"."tblContext"."FeatureNumber",
-  "public"."tblContextFeatureType"."FeatureType",
-  "public"."tblContext"."QuadratID",
-  "public"."tblContext"."DAACSPhase"
+                         SELECT
+                         "public"."tblCeramic"."Quantity",
+                         "public"."tblCeramicWare"."Ware",
+                         "public"."tblCeramicGenre"."CeramicGenre",
+                         "public"."tblCeramicCEWType"."CeramicCEWType",
+                         "public"."tblProjectName"."ProjectName",
+                         "public"."tblContext"."ProjectID",
+                         "public"."tblContext"."Context",
+                         "public"."tblContextDepositType"."DepositType",
+                         "public"."tblContext"."DAACSStratigraphicGroup",
+                         "public"."tblContext"."MasterContextNumber",
+                         "public"."tblContext"."FeatureNumber",
+                         "public"."tblContextFeatureType"."FeatureType",
+                         "public"."tblContext"."QuadratID",
+                         "public"."tblContext"."DAACSPhase"
+                         FROM
+                         "public"."tblProjectName"
+                         INNER JOIN "public"."tblProject" ON "public"."tblProject"."ProjectNameID" = "public"."tblProjectName"."ProjectNameID"
+                         INNER JOIN "public"."tblContext" ON "public"."tblContext"."ProjectID" = "public"."tblProject"."ProjectID"
+                         LEFT JOIN "public"."tblContextDepositType" ON "public"."tblContext"."DepositTypeID" = "public"."tblContextDepositType"."DepositTypeID"
+                         LEFT JOIN "public"."tblContextFeatureType" ON "public"."tblContext"."FeatureTypeID" = "public"."tblContextFeatureType"."FeatureTypeID" 
+                         INNER JOIN "public"."tblContextSample" ON "public"."tblContextSample"."ContextAutoID" = "public"."tblContext"."ContextAutoID"
+                         INNER JOIN "public"."tblGenerateContextArtifactID" ON "public"."tblContextSample"."ContextSampleID" = "public"."tblGenerateContextArtifactID"."ContextSampleID"
+                         INNER JOIN "public"."tblCeramic" ON "public"."tblCeramic"."GenerateContextArtifactID" = "public"."tblGenerateContextArtifactID"."GenerateContextArtifactID"
+                         INNER JOIN "public"."tblCeramicWare" ON "public"."tblCeramic"."WareID" = "public"."tblCeramicWare"."WareID"
+                         LEFT JOIN "public"."tblCeramicGenre" ON "public"."tblCeramic"."CeramicGenreID" = "public"."tblCeramicGenre"."CeramicGenreID"
+                         LEFT JOIN "public"."tblCeramicCEWType" ON "public"."tblCeramic"."CeramicCEWTypeID" = "public"."tblCeramicCEWType"."CeramicCEWTypeID"
+                         WHERE "public"."tblContext"."ProjectID" = \'1413\'
+                         ')
 
-FROM
-  "public"."tblProjectName"
-  INNER JOIN "public"."tblProject" ON "public"."tblProject"."ProjectNameID" = "public"."tblProjectName"."ProjectNameID"
-  INNER JOIN "public"."tblContext" ON "public"."tblContext"."ProjectID" = "public"."tblProject"."ProjectID"
-  LEFT JOIN "public"."tblContextDepositType" ON "public"."tblContext"."DepositTypeID" = "public"."tblContextDepositType"."DepositTypeID"
-  LEFT JOIN "public"."tblContextFeatureType" ON "public"."tblContext"."FeatureTypeID" = "public"."tblContextFeatureType"."FeatureTypeID" 
-  INNER JOIN "public"."tblContextSample" ON "public"."tblContextSample"."ContextAutoID" = "public"."tblContext"."ContextAutoID"
-  INNER JOIN "public"."tblGenerateContextArtifactID" ON "public"."tblContextSample"."ContextSampleID" = "public"."tblGenerateContextArtifactID"."ContextSampleID"
-  INNER JOIN "public"."tblCeramic" ON "public"."tblCeramic"."GenerateContextArtifactID" = "public"."tblGenerateContextArtifactID"."GenerateContextArtifactID"
-  INNER JOIN "public"."tblCeramicWare" ON "public"."tblCeramic"."WareID" = "public"."tblCeramicWare"."WareID"
-  LEFT JOIN "public"."tblCeramicGenre" ON "public"."tblCeramic"."CeramicGenreID" = "public"."tblCeramicGenre"."CeramicGenreID"
-  LEFT JOIN "public"."tblCeramicCEWType" ON "public"."tblCeramic"."CeramicCEWTypeID" = "public"."tblCeramicCEWType"."CeramicCEWTypeID"
-WHERE "public"."tblContext"."ProjectID" = \'106\'
-   ')
-
-# 4. Any customizations to the Ware Type dates should go here....
+#### 3. Any customizations to the Ware Type dates should go here....####
+#Change end dates!!!!!!!!!!!
+#MCDTypeTable$BeginDate[MCDTypeTable$Ware == 'Porcelain, Chinese']<-1700
+#MCDTypeTable$EndDate[MCDTypeTable$Ware == 'Whiteware']<-1930
+#MCDTypeTable$EndDate[MCDTypeTable$Ware == 'Ironstone/White Granite']<-1930
+#MCDTypeTable$EndDate[MCDTypeTable$Ware == 'Porcelain, French']<-1930
 
 
-# 5. Compute new numeric date variables from original ones, which we will need to compute the MCDs
+#### 4. Compute new numeric date variables from original ones, which we will need to compute the MCDs####
 MCDTypeTable <- MCDTypeTable %>% 
   mutate(midPoint = (EndDate+BeginDate)/2,
          span = (EndDate - BeginDate),
          inverseVar = 1/(span/6)^2 
   )
 
+#### 5. Remove contexts with deposit type cleanup and surface collection ####
+wareTypeData <- subset(wareTypeData, ! wareTypeData$DepositType  %in%  c('Clean-Up/Out-of-Stratigraphic Context',
+                                                               'Surface Collection'))
 
-# 6. Do a quick summary of the ware type totals
+
+#### 6. Do a quick summary of the ware type totals ####
 summary1 <- wareTypeData %>% group_by(ProjectName,ProjectID,Ware) %>% 
-            summarise(count = sum(Quantity))
+  summarise(count = sum(Quantity))
 summary1
 
 
-# 7. Create the UNIT Variable 
+#### 7. Create the UNIT Variable ####
 # The UNIT variable contains the level at which assemblages are aggregated in the analysis.
 # some housekeeping so we do not stumble on the confusion between R's NA (SQL NULLs) and blanks. 
-# wareTypeData$DAACSStratigraphicGroup[is.na(wareTypeData$DAACSStratigraphicGroup)] <- ''
-# wareTypeData$FeatureNumber[is.na(wareTypeData$FeatureNumber)] <- ''
-# wareTypeData$QuadratID[is.na(wareTypeData$QuadratID)] <- ''
-# 
-# wareTypeData1 <- wareTypeData %>%  
-#   mutate( unit = case_when(
-#     QuadratID == "" & FeatureNumber == "" & DAACSStratigraphicGroup == "" 
-#     ~ paste(Context),
-#     QuadratID == "" & FeatureNumber == "" & DAACSStratigraphicGroup != "" 
-#     ~ paste(DAACSStratigraphicGroup),
-#     QuadratID != "" & FeatureNumber == "" & DAACSStratigraphicGroup == "" 
-#     ~ paste(QuadratID,Context),
-#     QuadratID != "" & FeatureNumber == "" & DAACSStratigraphicGroup != "" 
-#     ~ paste(QuadratID,DAACSStratigraphicGroup),
-#     FeatureNumber != "" & DAACSStratigraphicGroup == ""
-#     ~ paste(FeatureNumber,Context),
-#     FeatureNumber != "" & DAACSStratigraphicGroup != "" 
-#     ~ paste(FeatureNumber,DAACSStratigraphicGroup)
-#   ))
-# 
-# # Check on the content of the unit variable
-# table(wareTypeData1$unit)
+#wareTypeData$DAACSStratigraphicGroup[is.na(wareTypeData$DAACSStratigraphicGroup)] <- ''
+#wareTypeData$FeatureNumber[is.na(wareTypeData$FeatureNumber)] <- ''
+#wareTypeData$QuadratID[is.na(wareTypeData$QuadratID)] <- ''
+# Use case_when to cycle through QuadID, Feature, SG, and Context to assign aggregration unit
+#wareTypeData_Unit <- wareTypeData %>%  
+#mutate( unit = case_when(
+#QuadratID == "" & FeatureNumber == "" & DAACSStratigraphicGroup == "" 
+#~ paste(Context),
+#QuadratID == "" & FeatureNumber == "" & DAACSStratigraphicGroup != "" 
+#~ paste(DAACSStratigraphicGroup),
+#QuadratID != "" & FeatureNumber == "" & DAACSStratigraphicGroup == "" 
+#~ paste(QuadratID,Context),
+#QuadratID != "" & FeatureNumber == "" & DAACSStratigraphicGroup != "" 
+#~ paste(QuadratID,DAACSStratigraphicGroup),
+#FeatureNumber != "" & DAACSStratigraphicGroup == ""
+#~ paste(FeatureNumber,Context),
+#FeatureNumber != "" & DAACSStratigraphicGroup != "" 
+#~ paste(FeatureNumber,DAACSStratigraphicGroup)
+#))
 
-wareTypeData$unit <- wareTypeData$Context  
+# Check on the content of the unit variable
+#table(wareTypeData_Unit$unit)
 
-
-# 8. Remove specific contexts, goups of contexts, and ware types as needed ... 
+  
+#### 8. Remove specific contexts, groups of contexts, and ware types as needed ... ####
+#Note that if you used Step 7 to create an aggregation unit you may need to change the dataframe name that is used in this step to the dataframe name created in that step, e.g. wareTypeData_Unit
 # The Quad that was dug into a backflled quad
 wareTypeData1 <- filter(wareTypeData, ! wareTypeData$QuadratID   %in% 
-                        c('082%'))
+                         c('082%'))
 
 # Remove specific contexts
-# wareTypeData1 <- filter (wareTypeData1, ! unit  
-# %in% c('B-AS24-001', 'B-AT24-002','B-AV29-032', 'B-AT23-003', 'B-AT23-009'))
-                          
+#wareTypeData2 <- filter (wareTypeData1, !unit  
+#%in% c('1030E120A SG04', '1030E130BC 96-01-021','1020E140B SG04','1020E140D SG04',
+#'1020E130B SG03', '1030E130A SG04','1020E130B SG04', '1030E120B SG04', '1030E130BC SG04'))
+
 # Remove spcific types
 # wareTypeData1 <-  filter(wareTypeData1, ! wareTypeData1$Ware  %in%  
 #                    c('Porcellaneous/English Hard Paste',
@@ -129,9 +135,11 @@ wareTypeData1 <- filter(wareTypeData, ! wareTypeData$QuadratID   %in%
 #                     'Sans Souci Type G',
 #                     'White Salt Glaze'))
 
-# 9. Tranpose the data for the MCD and CA
+#### 9. Tranpose the data for the MCD and CA ####
+#Note that depending on what you removed in step 8 you may need to change the dataframe name that is used
+#for the group_by and sum from wareTypeData1 to wareTypeData2
 WareByUnit <- wareTypeData1 %>% group_by(Ware,unit) %>% 
-                summarise(count = sum(Quantity))
+  summarise(count = sum(Quantity))
 
 # now we transpose the data so that we end up with a context (rows) x type 
 # (cols) data matrix; unit ~ ware formula syntax, left side = row, right side
@@ -140,7 +148,7 @@ WareByUnitT <- dcast(WareByUnit, unit ~ Ware, fun.aggregate=sum,
                      value.var='count', fill=0 )
 
 
-# 10. Enforce the sample size cut off -- typically > 5
+#### 10. Enforce the sample size cut off -- typically > 5 ####
 # lets compute the totals for each unit i.e. row
 # Note the use of column numbers as index values to get the type counts, which 
 # are assumed to start in col 2.
@@ -153,9 +161,9 @@ WareByUnitT1 <-WareByUnitT[WareByUnitTTotals > 5,]
 WareByUnitT1 <- WareByUnitT1 [,colSums(WareByUnitT1[,-1]) > 0]
 
 
-# 7. Define a function to Remove Types w/o Dates and a function to compute MCDs,
+#### 11. Define a function to Remove Types w/o Dates and a function to compute MCDs, ####
 # etc. 
-# 7.1 We build a function that removes types with no dates, either becauss they 
+# 11.1 We build a function that removes types with no dates, either because they 
 # have no dates in the MCD Ware Type Table or because they are not MCD Ware 
 # Types (e.g. they are CEW Types). This approach is useful because it returns a 
 # dataframe that contains ONLY types that went into the MCDs, which you may 
@@ -181,7 +189,7 @@ RemoveTypesNoDates <- function(unitData,typeData){
   unitDataWithDates <- unitData[, ! colnames(unitData) %in%  typesWithNoDates]
   typeDataWithDates <- typeData[! typeData$Ware %in%  typesWithNoDates, ]
   unitDataWithDates <- filter(unitDataWithDates, 
-                       rowSums(unitDataWithDates[,2:ncol(unitDataWithDates)])>0)
+                              rowSums(unitDataWithDates[,2:ncol(unitDataWithDates)])>0)
   return(list(unitData = unitDataWithDates, 
               typeData = typeDataWithDates))
 }
@@ -294,7 +302,7 @@ WareByUnitT2Sorted<-sortData(MCDByUnit$MCDs$blueMCD,
                              MCDByUnit$midPoints$mPoint,
                              dataWithDates$unitData)
 
-# 9.  Make a Ford-style battleship plot  ############
+#### 12.  Make a Ford-style battleship plot  ####
 # convert to a matrix, whose cols are the counts
 # make the unit name a 'rowname" of the matrix
 Mat<-as.matrix(WareByUnitT2Sorted[,2:ncol(WareByUnitT2Sorted)])
@@ -312,7 +320,7 @@ battleship.plot(MatProp,
 WareByUnitT2 <- dataWithDates$unitData
 
 
-# 10. Now let's try some Correspondence Analysis
+#### 13. Now let's try some Correspondence Analysis ####
 # You need to decide if you want to use the same data then wn into the MCDs (WareByUnitT2) 
 # or the full ware type dataset -- including types with no dates
 
@@ -375,7 +383,7 @@ p1 <- ggplot(rowScores, aes(x=Dim1,y=Dim2))+
   #geom_text(aes(label= rownames(rowscores)),vjust=-.6, cex=5) +
   geom_text_repel(aes(label=rownames(rowScores)), cex = 4) +
   labs(title="Site 6", x="Dimension 1", y="Dimension 2")
-  
+
 p1
 #save the plot for website chronology page/presentations
 #ggsave("Site 6_Figure1Dim1Dim2_2018cxt.png", p1, width=10, height=7.5, dpi=300)
@@ -386,7 +394,7 @@ p2 <- ggplot(colScores, aes(x = Dim1,y = Dim2))+
   #geom_text(aes(label=CA_MCD_Phase1$unit),vjust=-.6, cex=5)+
   geom_text_repel(aes(label=rownames(colScores)), cex= 6) +
   labs(title="Site 6", x="Dimension 1", y="Dimension 2") 
-  
+
 p2
 #save the plot for website chronology page/presentations
 #ggsave("Site 6_Figure2WareTypes_2018cxt.png", p2, width=10, height=7.5, dpi=300)
@@ -434,41 +442,45 @@ p4
 #ggsave("Site 6_Dim2BLUEMCD.png", p4, width=10, height=7.5, dpi=300)
 
 
+#create table of contexts, counts, and mcds
+unit <- MCDByUnit$MCDs$unit
+dim1Scores <- ca1$rowcoord[,1]
+dim2Scores <- ca1$rowcoord[,2]
+MCD<- MCDByUnit$MCDs$MCD
+blueMCD <-MCDByUnit$MCDs$blueMCD
+count<- MCDByUnit$MCDs$Count
+
+CA_MCD<-data.frame(unit, dim1Scores,dim2Scores,MCD,blueMCD, count) 
+
 # Dim 1 Scores Weighted Histogram, you may need to change scale
 dim1ForHist<- data.frame(dim1 = rep(CA_MCD$dim1Scores, CA_MCD$count))
 p5 <- ggplot(dim1ForHist, aes(x = dim1)) +
   geom_histogram(aes(y=..density..), colour="black", fill="tan", binwidth=0.1, 
                  boundary= .1) +
-  # xlim(-4,3)+
+   xlim(-9,3)+
   #stat_function(fun = dnorm, colour = "blue")+
   # scale_x_continuous(breaks=seq(-4, 2, 0.5), limits=c(-3.5,3))+
   labs(title="Site 6", x="Dimension 1", y="Density")+
   geom_density(fill=NA)
 p5
 
-hist(rep(CA_MCD$dim1Scores, CA_MCD$count),  freq=F, breaks =seq(-2.2, 2, .1), 
-     col='grey' )
-lines (density(rep(CA_MCD$dim1Scores, CA_MCD$count)))
-
-
- p5a <- p5 + geom_vline(xintercept=c(-.4), colour = "gray", linetype = "dashed",
-                        size=1)
- p5a
-# ggsave("Site 6_Histogram_2018cxt.png", p5, width=10, height=7.5, dpi=300)
 
 #Add lines for phase breaks
- p5 + geom_vline(xintercept = , size = 1, colour = "gray", linetype = "dashed")
+p5a <- p5 + geom_vline(xintercept=c(-4.1, -2), colour = "gray", linetype = "dashed",
+                       size=1)
+p5a
+
 # save the plot for website chronology page/presentations
-# ggsave("FirstHerm_Histogram.png", p5, width=10, height=7.5, dpi=300)
+# ggsave("Site6_Histogram.png", p5a, width=10, height=7.5, dpi=300)
 # 
 
 
 # create a vector for the phases with as many entries as assemblages
 Phase <- rep(NA, length(rowScores[,1])) 
 # do the phase assigments
-Phase[rowScores[,1] <= - .4] <- 'P01'  
-#Phase[(rowScores[,1] > -2.2) & (rowScores[,1]) <= -1.2] <- 'P02'
-Phase[rowScores[,1] >  - .4 ] <- 'P02'
+Phase[rowScores[,1] <= -.4] <- 'P01'  
+#Phase[(rowScores[,1] > -.4) & (rowScores[,1]) <= -1.2] <- 'P02'
+Phase[rowScores[,1] >  -.4] <- 'P03'
 
 # assemble the results in a dataframe
 CA_MCD_Phase <-  cbind(MCDByUnit$MCDs,rowScores[,1:2],Phase)
@@ -498,17 +510,17 @@ MCDByPhase
 #Export data
 #write.csv(CA_MCD_Phase, file='CA_MCD_Phase_SouthPavilion.csv')
 
-# BlueMCDByDim1 plot . 
+# BlueMCDByDim1 plot
 library(viridis)
 p6 <- ggplot(CA_MCD_Phase,aes(x = dim1Scores,y = blueMCD, fill= factor(Phase))) +
-  #  scale_y_continuous(limits=c(1760, 1920)) +
+  scale_y_continuous(limits=c(1760, 1920)) +
   geom_point(shape=21,  alpha = .75, size= 6)  + 
   scale_fill_viridis(discrete= T, name="DAACS Phase",
-                     labels=c("P01", "P02")) + 
+                     labels=c("P01", "P02", "P03")) + 
   geom_text_repel(aes(label= unit), cex=4) +
   labs(title="Site 6", x="Dimension 1", y="BLUE MCD")
 p6
 
-                     
+
 #save the plot for website chronology page/presentations
-ggsave("Site6ByContext.png", p6, width=10, height=7.5, dpi=300)
+#ggsave("Site6ByContext.png", p6, width=10, height=7.5, dpi=300)
