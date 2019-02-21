@@ -1,5 +1,5 @@
 # set the working directory
-#setwd("P:/DAACS/Archaeological Sites/Dominica/Morne Patate/Chronology/AllContexts/WithBlockC"
+setwd("C:/Users/cptacek/Desktop/mcd-ca-code/mcd-ca-code-master")
 
 # wareTypeCAandMCD.R
 # Establish a DBI connection to DAACS PostgreSQL database and submnit SQL queries
@@ -19,7 +19,7 @@ library (plotrix)
 library(ggplot2)
 library(viridis)
 
-source('credentials')
+source('credentials.R')
 
 #### 1. get the table with the ware type date ranges ####
 # get the table with the ware type date ranges
@@ -427,6 +427,7 @@ theme_set(theme_classic(base_size = 20))
 
 p <- ggplot(data=inertia , aes(x= 1:length(Inertia), y=Inertia)) +
   # geom_bar(stat="identity", fill="grey") +
+  theme(plot.title = element_text(hjust = 0.5))+
   geom_line(col= "cornflower blue", size=1) +
   geom_point(shape=21, size=5, colour="black", fill="cornflower blue") +
   labs( title="Morne Patate Village", x="Dimension", y='Porportion of Inertia' ) +
@@ -441,6 +442,7 @@ set.seed(42)
 p1 <- ggplot(rowScores, aes(x=Dim1,y=Dim2))+
   geom_point(shape=21, size=5, colour="black", fill="cornflower blue")+
   # geom_text(aes(label= unit,vjust=-.6, cex=5) +
+  theme(plot.title = element_text(hjust = 0.5))+
   geom_text_repel(aes(label= unit), cex = 4) +
   labs(title="Morne Patate Village", 
        x = paste ("Dimension 1",":  ", round(inertia[1,]*100),'%', sep=''), 
@@ -454,6 +456,7 @@ p1
 p2 <- ggplot(colScores, aes(x = Dim1,y = Dim2))+
   geom_point(shape=21, size=5, colour="black", fill="cornflower blue")+
   #geom_text(aes(label= type),vjust=-.6, cex=5)+
+  theme(plot.title = element_text(hjust = 0.5))+
   geom_text_repel(aes(label=type), cex= 3) +
   labs(title="Morne Patate Village", 
        x = paste ("Dimension 1",":  ", round(inertia[1,]*100),'%', sep=''), 
@@ -491,7 +494,8 @@ CA_MCD <- inner_join(MCDByUnit$MCDs, rowScores, by='unit' )
 p3 <- ggplot(CA_MCD, aes(x=Dim1,y=blueMCD))+
 geom_point(shape=21, size=5, colour="black", fill="cornflower blue")+
 #geom_text(aes(label=unit),vjust=-.6, cex=5)+
-geom_text_repel(aes(label=unit), cex=6) +
+  theme(plot.title = element_text(hjust = 0.5))+
+  geom_text_repel(aes(label=unit), cex=6) +
 labs(title="Morne Patate Village", 
      x="Dimension 1", 
      y="BLUE MCD") 
@@ -502,7 +506,8 @@ p3
 p4 <- ggplot(CA_MCD, aes(x = Dim2,y = blueMCD))+
 geom_point(shape=21, size=5, colour="black", fill="cornflower blue")+
 #geom_text(aes(label=unit),vjust=-.6, cex=5)+
- geom_text_repel(aes(label=unit), cex=6) +
+  theme(plot.title = element_text(hjust = 0.5))+
+  geom_text_repel(aes(label=unit), cex=6) +
 labs(title="Morne Patate Village", 
      x="Dimension 2", 
      y="BLUE MCD") 
@@ -518,7 +523,8 @@ p5 <- ggplot(dim1ForHist, aes(x = dim1)) +
                   boundary= .1) +
       scale_x_continuous(breaks=seq(- 8 , 4, 2))+
       labs(title="Morne Patate Village", x="Dimension 1", y="Density") +
-      geom_density(fill=NA)
+  theme(plot.title = element_text(hjust = 0.5))+
+  geom_density(fill=NA)
 p5
 
 
@@ -547,7 +553,8 @@ p6 <- ggplot(CA_MCD_Phase,aes(x = Dim1, y = blueMCD,
                       labels=c("P01", "P02", "P03"),
                       values=c("skyblue", "blue", "darkblue")) + 
   geom_text_repel(aes(label= unit), cex=4) +
-  labs(title="Morne Patate Village", x="Dimension 1", y="BLUE MCD")
+  labs(title="Morne Patate Village", x="Dimension 1", y="BLUE MCD")+
+  theme(plot.title = element_text(hjust = 0.5))
 p6
 
 # And here we use viridis colors (for color blind)
@@ -557,7 +564,8 @@ p6 <- ggplot(CA_MCD_Phase,aes(x = Dim1,y = blueMCD, fill= factor(Phase))) +
   scale_fill_viridis(discrete= T, name="DAACS Phase",
                      labels=c("P01", "P02", "P03")) + 
   #geom_text_repel(aes(label= unit), cex=4) +
-  labs(title="Morne Patate Village", x="Dimension 1", y="BLUE MCD")
+  labs(title="Morne Patate Village", x="Dimension 1", y="BLUE MCD")+
+  theme(plot.title = element_text(hjust = 0.5))
 p6
 
 # ggsave("MPvillage_Dim1MCDcolor_2018.png", p6, width=10, height=7.5, dpi=300)
