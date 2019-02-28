@@ -1,2 +1,2 @@
-# mcd-ca-code
-R code for Mean Ceramic Dates and Correspondence Analysis
+# Chronology
+R code for conducting analyses to create site chronologies
