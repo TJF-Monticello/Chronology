@@ -18,6 +18,8 @@ library(viridis)
 
 # Establish a DBI connection to DAACS PostgreSQL database and submit SQL queries
 
+# tell DBI which driver to use
+
 #Link to file with database password
 source("credentials.R")
 
@@ -70,7 +72,7 @@ wareTypeData<-dbGetQuery(DRCcon,'
                          LEFT JOIN "public"."tblCeramicCEWType" ON "public"."tblCeramic"."CeramicCEWTypeID" =
                          "public"."tblCeramicCEWType"."CeramicCEWTypeID"
                          WHERE                     
-                         "public"."tblContext"."ProjectID" = \'1243\'
+                         "public"."tblContext"."ProjectID" = \'106\'
                          ')             
 
 
@@ -179,15 +181,9 @@ wareByUnitT <- wareTypeData_Unit %>% group_by(Ware,unit) %>%
 # 8.1 It is possible at the point to drop types you do not want in the MCD computations
 # But it is not clear why one would want to do this. Here we name the types we do NOT
 # want included:
-wareByUnitT1 <- wareByUnitT %>% dplyr::select(- 'Nottingham', 
-                                              - 'Refined Earthenware, modern',
-                                              - 'American Stoneware',
-                                              - 'Refined Stoneware, unidentifiable',
-                                              - 'Fulham Type',
-                                              - 'Saintonge',
-                                              - 'Astbury Type', 
-                                              - 'White Salt Glaze',
-                                              - 'Delftware, Dutch/British')
+wareByUnitT1 <- wareByUnitT %>% dplyr::select( 
+  - 'American Stoneware',
+  - 'Refined Earthenware, unidentifiable')
 
 #another way of doing this -- needed?
 #badVars <- c('Nottingham', 
@@ -348,28 +344,19 @@ MCDByUnit
 #             the name of the dataframe that contains the counts of ware types 
 #               in units
 # returns:    the sorted dataframe 
+
 sortData<- function(unitScores,typeScores,unitData){
   sortedData<-unitData[order(unitScores, decreasing=T),]
   sortedData<-sortedData[,c(1,order(typeScores)+1)]
   return(sortedData)
 }
 
-# apply the function
-unitDataSorted <-sortData(MCDByUnit$MCDs$blueMCD,
-                          MCDByUnit$midPoints$mPoint,
-                          dataForMCD$unitData)
 
-
-
-#### 11.  Ford-style battleship plot  ####
-# convert to a matrix, whose cols are the counts
-# make the unit name a 'rowname' of the matrix
-# apply the function
 WareByUnitT2Sorted<-sortData(MCDByUnit$MCDs$blueMCD,
                              MCDByUnit$midPoints$mPoint,
-                             dataWithDates$unitData)
+                             dataForMCD$unitData)
 
-#### 12.  Make a Ford-style battleship plot  ####
+#### 11.  Make a Ford-style battleship plot  ####
 # convert to a matrix, whose cols are the counts
 # make the unit name a 'rowname" of the matrix
 Mat<-as.matrix(WareByUnitT2Sorted[,2:ncol(WareByUnitT2Sorted)])
@@ -384,14 +371,14 @@ battleship.plot(MatProp,
                 ylab= 'Context',
                 col='grey')
 
-WareByUnitT2 <- dataWithDates$unitData
+WareByUnitT2 <- dataForMCD$unitData
 
 #### 13. Now let's try some Correspondence Analysis ####
 # You need to decide if you want to use exactly the same data that
 # went into the MCD analysis (dataForMCD$unitData), or the 
 # data with all the ware types. To chose, commment out one of these two lines:
-wareByUnitT_forCA <- wareByUnitT1 # use all the data
-# wareByUnitT_forCA <- dataForMCD$unitData # use ONLY the data used for MCDs
+#wareByUnitT_forCA <- wareByUnitT1 # use all the data
+wareByUnitT_forCA <- dataForMCD$unitData # use ONLY the data used for MCDs
 
 # 13.1 USE THIS SECTION AFTER AN INITIAL CA RUN TO remove types and units from the analysis that are outliers
 
@@ -554,8 +541,8 @@ p5a
 # Do the Phase assigments, based on the Dim1 scores
 CA_MCD_Phase <- CA_MCD %>% mutate( Phase = case_when (Dim1 <= -3 ~ 'P01',
                                                       (Dim1 > -3) & 
-                                                        (Dim1 <= 0) ~ 'P02',
-                                                      Dim1 > 0 ~ 'P03'
+                                                        (Dim1 <= 1) ~ 'P02',
+                                                      Dim1 > 1 ~ 'P03'
 ))
 
 # BlueMCD By Dim1 plot by Phase
@@ -618,7 +605,3 @@ MCDByPhase
 
 phaseAssignments <- select(wareByUnit_Phase, ProjectName, ProjectID, Context, Phase)
 phaseAssignments <- unique(phaseAssignments)
-
-
-write.csv(phaseAssignments, file='ContextPhases_SITENAME.csv')
-
