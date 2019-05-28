@@ -549,6 +549,8 @@ CA_MCD_Phase <- CA_MCD %>% mutate( Phase = case_when (Dim1 <= -1.5 ~ 'P01',
                                                       #                                                        (Dim1 <= -1.2) ~ 'P02',
                                                       Dim1 > -1.5 ~ 'P02'
 ))
+                   
+#ggsave("SouthPavilion_WeightedHist.jpg", p5a, width=10, height=7.5, dpi=300)
 
 # BlueMCD By Dim1 plot by Phase
 # This one uses DAACS Website colors 
