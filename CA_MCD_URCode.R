@@ -17,18 +17,8 @@ library(ggplot2)
 library(viridis)
 
 # Establish a DBI connection to DAACS PostgreSQL database and submit SQL queries
-
-# tell DBI which driver to use
-
-pgSQL <- dbDriver("PostgreSQL")
-
-# establish the connection
-
-DRCcon<-dbConnect(pgSQL, host='drc.iath.virginia.edu', port='5432',
-                  
-                  dbname='daacs-production',
-                  
-                  user='drcquery', password='!queryacct!')
+#Link to file with database password
+source("credentials.R")
 
 
 #### 1. get the table with the ware type date ranges ####
