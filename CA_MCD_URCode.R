@@ -81,6 +81,9 @@ options(tibble.print_min=100)
 summary1
 
 
+#compute the total count of ceramics
+AllCeramicCount <- summary1 %>% summarise(Count=sum(count))
+
 #### 3. Customizations to the Ware Type dates or names####
 #3.1 For example, change beginning and end dates for French CEW to 1675-1900
 #MCDTypeTable <- MCDTypeTable %>% 
@@ -118,7 +121,8 @@ summary1
 
 
 #### 4. Compute new numeric date variables from original ones #### 
-# Needed  to compute the MCDs.
+# Compute midpoint, manufacturing span, and inverse variance for each ware type
+# and add new columns to house variables.  These are needed to calculate the MCD.
 MCDTypeTable <- MCDTypeTable %>% 
   mutate(midPoint = (EndDate+BeginDate)/2,
          span = (EndDate - BeginDate),
@@ -132,7 +136,12 @@ MCDTypeTable <- MCDTypeTable %>%
 
 #### 6. Create the UNIT Variable ####
 # The UNIT variable contains the level at which assemblages are aggregated in 
-# the analysis. You will need to cutomize this logic for YOUR site. Note that we create a new dataframe: wareTypeData_Unit.
+# the analysis. You will need to cutomize this logic for YOUR site. There
+# are circumstances where it will make the most sense to group by SGs or Features, but in others
+# you may need to use contexts. Note, you should only use ONE option, either 6.1, 6.2, 6.3, or 6.4.  The rest
+# should be commented out.
+# Note that we create a new dataframe: wareTypeData_Unit.
+
 # First some housekeeping so we do not stumble on the confusion between R's NA 
 # (SQL NULLs) and blanks. 
 wareTypeData$DAACSStratigraphicGroup[is.na(wareTypeData$DAACSStratigraphicGroup)] <- ''
@@ -140,7 +149,7 @@ wareTypeData$FeatureNumber[is.na(wareTypeData$FeatureNumber)] <- ''
 wareTypeData$QuadratID[is.na(wareTypeData$QuadratID)] <- '' 
 
 # 6.1 
-# Use case_when to cycle through QuadID, Feature, SG, and Context to assign 
+# Use case_when to cycle through Feature, SG, and Context to assign 
 # aggregration unit. 
 wareTypeData_Unit <- wareTypeData %>%  
   mutate( unit = case_when(
@@ -160,11 +169,17 @@ wareTypeData_Unit <- wareTypeData %>%
 
 ## 6.3 Use this to assign Quadrat to the unit. 
 #wareTypeData_Unit <- wareTypeData %>%  
-#mutate( unit = case_when(
+#mutate(unit = case_when(
 #QuadratID == "" ~ paste(Context)
 ##QuadratID != "" ~ paste(QuadratID)
 
+## 6.4 Use this to assign Quadrat and Context to the unit.
+#wareTypeData_Unit <- wareTypeData %>% 
+#  mutate(unit = case_when(
+#    QuadratID == "" ~paste(Context),
+#    QuadratID != "" ~paste(QuadratID, Context, sep='.')))
 # Check on the content of the unit variable to make sure all is cool.
+
 table(wareTypeData_Unit$unit)
 
 
@@ -393,7 +408,7 @@ wareByUnitT_forCA <- dataForMCD$unitData # use ONLY the data used for MCDs
 # )
 
 # Remove units
- wareByUnitT_forCA <- wareByUnitT_forCA %>% filter(
+wareByUnitT_forCA <- wareByUnitT_forCA %>% filter(
   unit != 'F11.SG18')
 
 #Run the CA
@@ -445,6 +460,9 @@ p <- ggplot(data=inertia , aes(x= 1:length(Inertia), y=Inertia)) +
   geom_line(aes(y = bs[,2], x= bs[,1]), color = "black", linetype = "dashed", 
             size=1)
 p
+#save the plot for website chronology page/presentations
+#make sure to update file names for this and all subsequent plots
+#ggsave("SouthPav_InertiaPlot.png", p, width=10, height=7.5, dpi=300)
 
 
 # ggplot version of row scores dim 1 and dim 2
@@ -461,7 +479,7 @@ p1 <- ggplot(rowScores, aes(x=Dim1,y=Dim2))+
   )
 p1
 #save the plot for website chronology page/presentations
-#ggsave("Site 6_Figure1Dim1Dim2_2018cxt.png", p1, width=10, height=7.5, dpi=300)
+#ggsave("SouthPav_Figure1Dim1Dim2_2018cxt.png", p1, width=10, height=7.5, dpi=300)
 
 #ggplot version of col scores dim 1 and dim 2
 p2 <- ggplot(colScores, aes(x = Dim1,y = Dim2))+
@@ -475,7 +493,37 @@ p2 <- ggplot(colScores, aes(x = Dim1,y = Dim2))+
   )  
 p2
 #save the plot for website chronology page/presentations
-#ggsave("Site 6_Figure2WareTypes_2018cxt.png", p2, width=10, height=7.5, dpi=300)
+#ggsave("SouthPav_Figure2WareTypes_2018cxt.png", p2, width=10, height=7.5, dpi=300)
+
+# ggplot version of row scores dim 1 and dim 3
+library(ggrepel)
+set.seed(42)
+p1a <- ggplot(rowScores, aes(x=Dim1,y=Dim3))+
+  geom_point(shape=21, size=5, colour="black", fill="cornflower blue")+
+  # geom_text(aes(label= unit,vjust=-.6, cex=5) +
+  theme(plot.title = element_text(hjust = 0.5))+
+  geom_text_repel(aes(label= unit), cex = 4) +
+  labs(title="South Pavilion", 
+       x = paste ("Dimension 1",":  ", round(inertia[1,]*100),'%', sep=''), 
+       y= paste ("Dimension 3",":  ", round(inertia[3,]*100),'%', sep='')
+  )
+p1a
+#save the plot for website chronology page/presentations
+#ggsave("SouthPav_Figure1Dim1Dim3_2018cxt.png", p1, width=10, height=7.5, dpi=300)
+
+#ggplot version of col scores dim 1 and dim 3
+p2a <- ggplot(colScores, aes(x = Dim1,y = Dim3))+
+  geom_point(shape=21, size=5, colour="black", fill="cornflower blue")+
+  #geom_text(aes(label= type),vjust=-.6, cex=5)+
+  theme(plot.title = element_text(hjust = 0.5))+
+  geom_text_repel(aes(label=type), cex= 3) +
+  labs(title="South Pavilion", 
+       x = paste ("Dimension 1",":  ", round(inertia[1,]*100),'%', sep=''), 
+       y= paste ("Dimension 3",":  ", round(inertia[3,]*100),'%', sep='')
+  )  
+p2a
+#save the plot for website chronology page/presentations
+#ggsave("SouthPav_Figure2Dim1Dim3Wares_2018cxt.png", p2, width=10, height=7.5, dpi=300)
 
 
 # sort the data matrix that went into the CA on the dim1 scores and do a 
@@ -486,13 +534,17 @@ rownames(Mat)<-wareByUnitT_Sorted$unit
 rSums<- matrix (rowSums(Mat),nrow(Mat),ncol(Mat), byrow=F)
 MatProp<-Mat/rSums
 # Do the plot
-battleship.plot(MatProp,
+SeriationCA<-battleship.plot(MatProp,
                 mar=c(2,4,8,4),
                 cex.labels=.8,
                 main = 'Seriation by CA Dimension 1',
                 xlab='Ware Type',
                 ylab= 'Context',
                 col='grey')
+
+SeriationCA
+#save the plot for website chronology page/presentations
+#ggsave("SouthPav_SeriationCADim1_2018cxt.png", p2, width=10, height=7.5, dpi=300)
 
 #### 13. Compare MCD and CA dim scores ####
 # create a data frame of units, counts, and mcds
@@ -510,7 +562,7 @@ p3 <- ggplot(CA_MCD, aes(x=Dim1,y=blueMCD))+
        y="BLUE MCD") 
 p3
 # save the plot for website chronology page/presentations
-# ggsave("Site 6_Dim1BLUEMCD_2018cxt.png", p3, width=10, height=7.5, dpi=300)
+# ggsave("SouthPav_Dim1BLUEMCD_2018cxt.png", p3, width=10, height=7.5, dpi=300)
 
 #ggplot version of CA Dim 2 vs. MCDs
 p4 <- ggplot(CA_MCD, aes(x = Dim2,y = blueMCD))+
@@ -522,7 +574,7 @@ p4 <- ggplot(CA_MCD, aes(x = Dim2,y = blueMCD))+
        x="Dimension 2", 
        y="BLUE MCD") 
 p4 
-#ggsave("Site 6_Dim2BLUEMCD.png", p4, width=10, height=7.5, dpi=300)
+#ggsave("SouthPav_Dim2BLUEMCD.png", p4, width=10, height=7.5, dpi=300)
 
 #### 14. Histogram of Dim 1 scores for Phasing ####
 # Dim 1 Scores Weighted Histogram, you may need to change scale
@@ -542,15 +594,18 @@ p5a <- p5 + geom_vline(xintercept=c(-1), colour = "gray", linetype = "dashed",
                        size=1)
 p5a
 
+#ggsave("SouthPavilion_WeightedHist.jpg", p5a, width=10, height=7.5, dpi=300)
+
 #### 15.  Do the Dim 1 -  MCD scatterplot with Phase assignments  ####
 # Do the Phase assigments, based on the Dim1 scores
-CA_MCD_Phase <- CA_MCD %>% mutate( Phase = case_when (Dim1 <= -1.5 ~ 'P01',
-                                                      #                                                      (Dim1 > -.4) & 
-                                                      #                                                        (Dim1 <= -1.2) ~ 'P02',
+# Note, depending on how many phases you have you will need to add or comment out lines and update boundaries
+CA_MCD_Phase <- CA_MCD %>% mutate(Phase = case_when (Dim1 <= -1.5 ~ 'P01',
+                                                      #(Dim1 > -.4) & 
+                                                      #(Dim1 <= -1.2) ~ 'P02',
                                                       Dim1 > -1.5 ~ 'P02'
 ))
-                   
-#ggsave("SouthPavilion_WeightedHist.jpg", p5a, width=10, height=7.5, dpi=300)
+
+
 
 # BlueMCD By Dim1 plot by Phase
 # This one uses DAACS Website colors 
