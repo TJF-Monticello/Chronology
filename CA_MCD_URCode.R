@@ -69,7 +69,7 @@ wareTypeData<-dbGetQuery(DRCcon,'
                          LEFT JOIN "public"."tblCeramicCEWType" ON "public"."tblCeramic"."CeramicCEWTypeID" =
                          "public"."tblCeramicCEWType"."CeramicCEWTypeID"
                          WHERE                     
-                         "public"."tblContext"."ProjectID" = \'106\'
+                         "public"."tblContext"."ProjectID" = \'67\'
                          ')             
 
 
@@ -126,8 +126,8 @@ MCDTypeTable <- MCDTypeTable %>%
   )
 
 #### 5. Here you have the option to remove contexts with deposit type Cleanup and Surface Collection ####
-wareTypeData <- subset(wareTypeData, ! wareTypeData$DepositType  %in%  c('Clean-Up/Out-of-Stratigraphic Context',
-                                                                         'Surface Collection'))
+#wareTypeData <- subset(wareTypeData, ! wareTypeData$DepositType  %in%  c('Clean-Up/Out-of-Stratigraphic Context',
+#                                                                         'Surface Collection'))
 
 
 #### 6. Create the UNIT Variable ####
@@ -190,7 +190,8 @@ wareByUnitT1 <- wareByUnitT %>% dplyr::select(
 #             'Fulham Type',
 #             'Saintonge',
 #             'Astbury Type', 
-#             'White Salt Glaze')
+#             'White Salt Glaze',
+#             'Delftware, Dutch/British')
 
 #goodVars <- !names(wareByUnitT) %in% badVars
 #wareByUnitT1 <- wareByUnitT[,goodVars] 
@@ -392,8 +393,8 @@ wareByUnitT_forCA <- dataForMCD$unitData # use ONLY the data used for MCDs
 # )
 
 # Remove units
-# wareByUnitT_forCA <- wareByUnitT_forCA %>% filter(
-#  unit != '062.5364')
+ wareByUnitT_forCA <- wareByUnitT_forCA %>% filter(
+  unit != 'F11.SG18')
 
 #Run the CA
 matX <- as.matrix(wareByUnitT_forCA[,-1]) 
@@ -437,9 +438,10 @@ theme_set(theme_classic(base_size = 20))
 
 p <- ggplot(data=inertia , aes(x= 1:length(Inertia), y=Inertia)) +
   # geom_bar(stat="identity", fill="grey") +
+  theme(plot.title = element_text(hjust = 0.5))+
   geom_line(col= "cornflower blue", size=1) +
   geom_point(shape=21, size=5, colour="black", fill="cornflower blue") +
-  labs( title="Site 6", x="Dimension", y='Porportion of Inertia' ) +
+  labs( title="South Pavilion", x="Dimension", y='Proportion of Inertia' ) +
   geom_line(aes(y = bs[,2], x= bs[,1]), color = "black", linetype = "dashed", 
             size=1)
 p
@@ -451,8 +453,9 @@ set.seed(42)
 p1 <- ggplot(rowScores, aes(x=Dim1,y=Dim2))+
   geom_point(shape=21, size=5, colour="black", fill="cornflower blue")+
   # geom_text(aes(label= unit,vjust=-.6, cex=5) +
+  theme(plot.title = element_text(hjust = 0.5))+
   geom_text_repel(aes(label= unit), cex = 4) +
-  labs(title="Morne Patate Village", 
+  labs(title="South Pavilion", 
        x = paste ("Dimension 1",":  ", round(inertia[1,]*100),'%', sep=''), 
        y= paste ("Dimension 2",":  ", round(inertia[2,]*100),'%', sep='')
   )
@@ -464,8 +467,9 @@ p1
 p2 <- ggplot(colScores, aes(x = Dim1,y = Dim2))+
   geom_point(shape=21, size=5, colour="black", fill="cornflower blue")+
   #geom_text(aes(label= type),vjust=-.6, cex=5)+
+  theme(plot.title = element_text(hjust = 0.5))+
   geom_text_repel(aes(label=type), cex= 3) +
-  labs(title="Site 6", 
+  labs(title="South Pavilion", 
        x = paste ("Dimension 1",":  ", round(inertia[1,]*100),'%', sep=''), 
        y= paste ("Dimension 2",":  ", round(inertia[2,]*100),'%', sep='')
   )  
@@ -499,19 +503,22 @@ CA_MCD <- inner_join(MCDByUnit$MCDs, rowScores, by='unit' )
 p3 <- ggplot(CA_MCD, aes(x=Dim1,y=blueMCD))+
   geom_point(shape=21, size=5, colour="black", fill="cornflower blue")+
   #geom_text(aes(label=unit),vjust=-.6, cex=5)+
+  theme(plot.title = element_text(hjust = 0.5))+
   geom_text_repel(aes(label=unit), cex=6) +
-  labs(title="Site 6", 
+  labs(title="South Pavilion", 
        x="Dimension 1", 
        y="BLUE MCD") 
-p3 
+p3
 # save the plot for website chronology page/presentations
 # ggsave("Site 6_Dim1BLUEMCD_2018cxt.png", p3, width=10, height=7.5, dpi=300)
 
+#ggplot version of CA Dim 2 vs. MCDs
 p4 <- ggplot(CA_MCD, aes(x = Dim2,y = blueMCD))+
   geom_point(shape=21, size=5, colour="black", fill="cornflower blue")+
   #geom_text(aes(label=unit),vjust=-.6, cex=5)+
   geom_text_repel(aes(label=unit), cex=6) +
-  labs(title="Site 6", 
+  theme(plot.title = element_text(hjust = 0.5))+
+  labs(title="South Pavilion", 
        x="Dimension 2", 
        y="BLUE MCD") 
 p4 
@@ -521,25 +528,26 @@ p4
 # Dim 1 Scores Weighted Histogram, you may need to change scale
 dim1ForHist<- data.frame(dim1 = rep(CA_MCD$Dim1, CA_MCD$Count))
 p5 <- ggplot(dim1ForHist, aes(x = dim1)) +
+  theme(plot.title = element_text(hjust = 0.5))+
   geom_histogram(aes(y=..density..), colour="black", fill="tan", binwidth=0.2, 
                  boundary= .1) +
   scale_x_continuous(breaks=seq(- 8 , 4, 2))+
-  labs(title="Morne Patate Village", x="Dimension 1", y="Density") +
+  labs(title="South Pavilion", x="Dimension 1", y="Density") +
   geom_density(fill=NA)
 p5
 
 
 # Add lines for phase breaks
-p5a <- p5 + geom_vline(xintercept=c(- 3, 0 ), colour = "gray", linetype = "dashed",
+p5a <- p5 + geom_vline(xintercept=c(-1), colour = "gray", linetype = "dashed",
                        size=1)
 p5a
 
 #### 15.  Do the Dim 1 -  MCD scatterplot with Phase assignments  ####
 # Do the Phase assigments, based on the Dim1 scores
-CA_MCD_Phase <- CA_MCD %>% mutate( Phase = case_when (Dim1 <= 0 ~ 'P01',
-#                                                      (Dim1 > -.4) & 
-#                                                        (Dim1 <= -1.2) ~ 'P02',
-                                                      Dim1 > 0 ~ 'P02'
+CA_MCD_Phase <- CA_MCD %>% mutate( Phase = case_when (Dim1 <= -1.5 ~ 'P01',
+                                                      #                                                      (Dim1 > -.4) & 
+                                                      #                                                        (Dim1 <= -1.2) ~ 'P02',
+                                                      Dim1 > -1.5 ~ 'P02'
 ))
 
 # BlueMCD By Dim1 plot by Phase
@@ -554,8 +562,11 @@ p6 <- ggplot(CA_MCD_Phase,aes(x = Dim1, y = blueMCD,
                     labels=c("P01", "P02"),
                     values=c("skyblue", "blue")) + 
   geom_text_repel(aes(label= unit), cex=4) +
-  labs(title="Site 6", x="Dimension 1", y="BLUE MCD")
+  theme(plot.title = element_text(hjust = 0.5))+
+  labs(title="South Pavilion", x="Dimension 1", y="BLUE MCD")
 p6
+
+#ggsave("SPav_Dim1MCDcolor_2018.png", p6, width=10, height=7.5, dpi=300)
 
 # And here we use viridis colors (for color blind)
 p6a <- ggplot(CA_MCD_Phase,aes(x = Dim1,y = blueMCD, fill= factor(Phase))) +
@@ -563,11 +574,13 @@ p6a <- ggplot(CA_MCD_Phase,aes(x = Dim1,y = blueMCD, fill= factor(Phase))) +
   geom_point(shape=21,  alpha = .75, size= 6)  + 
   scale_fill_viridis(discrete= T, name="DAACS Phase",
                      labels=c("P01", "P02")) + 
-  #geom_text_repel(aes(label= unit), cex=4) +
-  labs(title="Morne Patate Village", x="Dimension 1", y="BLUE MCD")
+  geom_text_repel(aes(label= unit), cex=4) +
+  theme(plot.title = element_text(hjust = 0.5))+
+  labs(title="South Pavilion", x="Dimension 1", y="BLUE MCD")
 p6a
 
-# ggsave("MPvillage_Dim1MCDcolor_2018.png", p6, width=10, height=7.5, dpi=300)
+#ggsave("SPav_Dim1MCDcolor_2018.png", p6a, width=10, height=7.5, dpi=300)
+
 
 ##### 16. Compute the MCDs and TPQs for the phases ####
 
@@ -580,7 +593,7 @@ wareByUnit_Phase<- left_join (wareTypeData_Unit, unitPhase, by = 'unit') %>%
 
 
 # Compare assigned DAACS phases to the ones we came up with above
-# looks lilke there are diffrences!!!!
+# looks like there are diffrences!!!!
 with(wareByUnit_Phase, table(DAACSPhase, Phase))
 
 
