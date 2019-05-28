@@ -20,8 +20,15 @@ library(viridis)
 
 # tell DBI which driver to use
 
-#Link to file with database password
-source("credentials.R")
+pgSQL <- dbDriver("PostgreSQL")
+
+# establish the connection
+
+DRCcon<-dbConnect(pgSQL, host='drc.iath.virginia.edu', port='5432',
+                  
+                  dbname='daacs-production',
+                  
+                  user='drcquery', password='!queryacct!')
 
 
 #### 1. get the table with the ware type date ranges ####
@@ -373,14 +380,14 @@ battleship.plot(MatProp,
 
 WareByUnitT2 <- dataForMCD$unitData
 
-#### 13. Now let's try some Correspondence Analysis ####
+#### 12. Now let's try some Correspondence Analysis ####
 # You need to decide if you want to use exactly the same data that
 # went into the MCD analysis (dataForMCD$unitData), or the 
 # data with all the ware types. To chose, commment out one of these two lines:
 #wareByUnitT_forCA <- wareByUnitT1 # use all the data
 wareByUnitT_forCA <- dataForMCD$unitData # use ONLY the data used for MCDs
 
-# 13.1 USE THIS SECTION AFTER AN INITIAL CA RUN TO remove types and units from the analysis that are outliers
+# 12.1 USE THIS SECTION AFTER AN INITIAL CA RUN TO remove types and units from the analysis that are outliers
 
 # Remove types
 # wareByUnitT_forCA <- wareByUnitT_forCA %>% select( 
@@ -407,7 +414,7 @@ ca1<-ca(matX)
 
 # put the result in dataframes
 inertia <- data.frame('Inertia' = prop.table(ca1$sv^2))
-############ fix rownames?? ################
+
 
 rowScores <- data.frame(ca1$rowcoord[,1:5], unit =ca1$rownames)
 colScores <- data.frame(ca1$colcoord[,1:5], type =ca1$colnames)
@@ -442,7 +449,7 @@ p <- ggplot(data=inertia , aes(x= 1:length(Inertia), y=Inertia)) +
   # geom_bar(stat="identity", fill="grey") +
   geom_line(col= "cornflower blue", size=1) +
   geom_point(shape=21, size=5, colour="black", fill="cornflower blue") +
-  labs( title="Morne Patate Village", x="Dimension", y='Porportion of Inertia' ) +
+  labs( title="Site 6", x="Dimension", y='Porportion of Inertia' ) +
   geom_line(aes(y = bs[,2], x= bs[,1]), color = "black", linetype = "dashed", 
             size=1)
 p
@@ -468,7 +475,7 @@ p2 <- ggplot(colScores, aes(x = Dim1,y = Dim2))+
   geom_point(shape=21, size=5, colour="black", fill="cornflower blue")+
   #geom_text(aes(label= type),vjust=-.6, cex=5)+
   geom_text_repel(aes(label=type), cex= 3) +
-  labs(title="Morne Patate Village", 
+  labs(title="Site 6", 
        x = paste ("Dimension 1",":  ", round(inertia[1,]*100),'%', sep=''), 
        y= paste ("Dimension 2",":  ", round(inertia[2,]*100),'%', sep='')
   )  
@@ -493,7 +500,7 @@ battleship.plot(MatProp,
                 ylab= 'Context',
                 col='grey')
 
-#### 14. Compare MCD and CA dim scores
+#### 13. Compare MCD and CA dim scores ####
 # create a data frame of units, counts, and mcds
 CA_MCD <- inner_join(MCDByUnit$MCDs, rowScores, by='unit' )
 
@@ -503,7 +510,7 @@ p3 <- ggplot(CA_MCD, aes(x=Dim1,y=blueMCD))+
   geom_point(shape=21, size=5, colour="black", fill="cornflower blue")+
   #geom_text(aes(label=unit),vjust=-.6, cex=5)+
   geom_text_repel(aes(label=unit), cex=6) +
-  labs(title="Morne Patate Village", 
+  labs(title="Site 6", 
        x="Dimension 1", 
        y="BLUE MCD") 
 p3 
@@ -514,13 +521,13 @@ p4 <- ggplot(CA_MCD, aes(x = Dim2,y = blueMCD))+
   geom_point(shape=21, size=5, colour="black", fill="cornflower blue")+
   #geom_text(aes(label=unit),vjust=-.6, cex=5)+
   geom_text_repel(aes(label=unit), cex=6) +
-  labs(title="Morne Patate Village", 
+  labs(title="Site 6", 
        x="Dimension 2", 
        y="BLUE MCD") 
 p4 
 #ggsave("Site 6_Dim2BLUEMCD.png", p4, width=10, height=7.5, dpi=300)
 
-#### 15. Histogram of Dim 1 scores for Phasing
+#### 14. Histogram of Dim 1 scores for Phasing ####
 # Dim 1 Scores Weighted Histogram, you may need to change scale
 dim1ForHist<- data.frame(dim1 = rep(CA_MCD$Dim1, CA_MCD$Count))
 p5 <- ggplot(dim1ForHist, aes(x = dim1)) +
@@ -537,41 +544,42 @@ p5a <- p5 + geom_vline(xintercept=c(- 3, 0 ), colour = "gray", linetype = "dashe
                        size=1)
 p5a
 
-#### 16.  Do the Dim 1 -  MCD scatterplot with Phase assignments  
+#### 15.  Do the Dim 1 -  MCD scatterplot with Phase assignments  ####
 # Do the Phase assigments, based on the Dim1 scores
-CA_MCD_Phase <- CA_MCD %>% mutate( Phase = case_when (Dim1 <= -3 ~ 'P01',
-                                                      (Dim1 > -3) & 
-                                                        (Dim1 <= 1) ~ 'P02',
-                                                      Dim1 > 1 ~ 'P03'
+CA_MCD_Phase <- CA_MCD %>% mutate( Phase = case_when (Dim1 <= 0 ~ 'P01',
+#                                                      (Dim1 > -.4) & 
+#                                                        (Dim1 <= -1.2) ~ 'P02',
+                                                      Dim1 > 0 ~ 'P02'
 ))
 
 # BlueMCD By Dim1 plot by Phase
 # This one uses DAACS Website colors 
+# Be sure to adjust labels and and values accordingly, value for P03 is "darkblue"
 
 p6 <- ggplot(CA_MCD_Phase,aes(x = Dim1, y = blueMCD, 
                               fill= Phase)) +
   #scale_y_continuous(limits=c(1750, 1950)) +
   geom_point(shape=21,  alpha = .75, size= 6)  + 
   scale_fill_manual(name="DAACS Phase",
-                    labels=c("P01", "P02", "P03"),
-                    values=c("skyblue", "blue", "darkblue")) + 
+                    labels=c("P01", "P02"),
+                    values=c("skyblue", "blue")) + 
   geom_text_repel(aes(label= unit), cex=4) +
-  labs(title="Morne Patate Village", x="Dimension 1", y="BLUE MCD")
+  labs(title="Site 6", x="Dimension 1", y="BLUE MCD")
 p6
 
 # And here we use viridis colors (for color blind)
-p6 <- ggplot(CA_MCD_Phase,aes(x = Dim1,y = blueMCD, fill= factor(Phase))) +
+p6a <- ggplot(CA_MCD_Phase,aes(x = Dim1,y = blueMCD, fill= factor(Phase))) +
   #scale_y_continuous(limits=c(1760, 1920)) +
   geom_point(shape=21,  alpha = .75, size= 6)  + 
   scale_fill_viridis(discrete= T, name="DAACS Phase",
-                     labels=c("P01", "P02", "P03")) + 
+                     labels=c("P01", "P02")) + 
   #geom_text_repel(aes(label= unit), cex=4) +
   labs(title="Morne Patate Village", x="Dimension 1", y="BLUE MCD")
-p6
+p6a
 
 # ggsave("MPvillage_Dim1MCDcolor_2018.png", p6, width=10, height=7.5, dpi=300)
 
-##### 17. Compute the MCDs and TPQs for the phases
+##### 16. Compute the MCDs and TPQs for the phases ####
 
 # join the Phases to the ware by unit data
 unitPhase <- select(CA_MCD_Phase, unit, Phase) 
@@ -586,7 +594,7 @@ wareByUnit_Phase<- left_join (wareTypeData_Unit, unitPhase, by = 'unit') %>%
 with(wareByUnit_Phase, table(DAACSPhase, Phase))
 
 
-# Transpose the data for the MCD and CA ####
+# Transpose the data for the MCD and CA 
 wareByPhaseT <- wareByUnit_Phase %>% group_by(Ware, Phase) %>% 
   summarise(count = sum(Quantity)) %>%
   spread(Ware, value=count , fill=0 )
@@ -601,7 +609,7 @@ MCDByPhase<-EstimateMCD(dataForMCD_Phase$unitData,
 # let's see what it looks like
 MCDByPhase
 
-#### 18. Write out .csv contexts and phase assignments for DAACS database #####
+#### 17. Write out .csv contexts and phase assignments for DAACS database #####
 
 phaseAssignments <- select(wareByUnit_Phase, ProjectName, ProjectID, Context, Phase)
 phaseAssignments <- unique(phaseAssignments)
