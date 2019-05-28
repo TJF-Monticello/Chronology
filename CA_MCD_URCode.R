@@ -590,6 +590,7 @@ p5
 
 
 # Add lines for phase breaks
+# Note -- don't do this until after you have removed outliers
 p5a <- p5 + geom_vline(xintercept=c(-1), colour = "gray", linetype = "dashed",
                        size=1)
 p5a
