@@ -4,7 +4,7 @@
 # Edited by:   LAB 1.17.2017 for Morne Patate
 # Edited by:   LC 12.4.2017 Hermitage phases
 # Edited by:   FDN 12.21.2018 more tidy; fixed MCD function to handle phases.
-# Edited by:   CP and EB 3.18.2018 Comments and Section editing for UR code
+# Edited by:   CP and EB 5.28.2019 Comments and Section editing for UR code
 
 # load the libraries
 library(RPostgreSQL)
