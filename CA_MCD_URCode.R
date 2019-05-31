@@ -192,7 +192,7 @@ wareByUnitT <- wareTypeData_Unit %>% group_by(Ware,unit) %>%
 #### 8. Remove specific ware types (if you must) and set sample size cut off  ####
 # 8.1 It is possible at the point to drop types you do not want in the MCD computations
 # But it is not clear why one would want to do this. Here we name the types we do NOT
-# want included:
+# want included (NOTE: You will need to add the types that are particular to your site to the select function):
 wareByUnitT1 <- wareByUnitT %>% dplyr::select( 
   - 'American Stoneware',
   - 'Refined Earthenware, unidentifiable')
