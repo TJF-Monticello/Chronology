@@ -411,6 +411,7 @@ wareByUnitT_forCA <- dataForMCD$unitData # use ONLY the data used for MCDs
 wareByUnitT_forCA <- wareByUnitT_forCA %>% filter(
   unit != 'F11.SG18')
 
+#12.2 USE THIS SECTION TO RUN THE INITIAL CA AND THEN USE AGAIN AFTER REMOVING OUTLIERS                   
 #Run the CA
 matX <- as.matrix(wareByUnitT_forCA[,-1]) 
 rownames(matX) <- wareByUnitT_forCA$unit
@@ -426,7 +427,12 @@ rowScores <- data.frame(ca1$rowcoord[,1:5], unit =ca1$rownames)
 colScores <- data.frame(ca1$colcoord[,1:5], type =ca1$colnames)
 
 
-# Compute the broken stick model inertia
+# 12.3 Compute the broken stick model inertia
+# Broken stick model hows inertia percentage values would look if distribution was random -- i.e. null hypothesis.  
+# If the inertia values returned by the CA function are showing Dim 1 is capturing significant variation then Dim 1 values from CA 
+# will be higher than Dim 1 values from BS and Dim 2 values will be lower than values from BS
+# If Dim1 and Dim2 are significant CA, values in CA for both dimensions will be higher than both values in BS.
+
 broken.stick <- function(p)
   # Compute the expected values of the broken-stick distribution for 'p' pieces.
   # Example: broken.stick.out.20 = broken.stick(20)
@@ -465,6 +471,7 @@ p
 #ggsave("SouthPav_InertiaPlot.png", p, width=10, height=7.5, dpi=300)
 
 
+# 12.4 plots of row and column scores for Dim 1 vs. Dim 2 and Dim 1 vs. Dim 3 
 # ggplot version of row scores dim 1 and dim 2
 library(ggrepel)
 set.seed(42)
