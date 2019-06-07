@@ -104,20 +104,20 @@ AllCeramicCount <- summary1 %>% summarise(Count=sum(count))
 #3.2 Replace ware types with CEWs Types if applicable
 #For example, replace 'Caribbean CEW' ware type with applicable CEW Type
 #wareTypeData <- mutate(wareTypeData, Ware= ifelse((Ware %in% 
-#                                                     c('Caribbean Coarse Earthenware, unid.',
-#                                                       'Caribbean Coarse Earthenware, wheel thrown',
-#                                                       'Caribbean Coarse Earthenware, hand built')), CeramicCEWType, 
-#                                                  Ware))
+#                                                    c('Caribbean Coarse Earthenware, unid.',
+#                                                      'Caribbean Coarse Earthenware, wheel thrown',
+#                                                      'Caribbean Coarse Earthenware, hand built')), CeramicCEWType, 
+#                                                 Ware))
 
 # Replace Unid. Carib CEW ware type with 'Caribbean CEW Unid.'
 #wareTypeData <- mutate(wareTypeData, Ware=ifelse(Ware == 'Unidentifiable', 
 #                                                 'Carribean CEW Unid.', Ware))
 
 #3.3. Do a quick summary of the new ware type totals if you run either of the sections above.
-#summary2 <- wareTypeData %>% 
-#  group_by(ProjectName, ProjectID, Ware) %>% 
-#  summarise(count = sum(Quantity))
-#summary2
+summary2 <- wareTypeData %>% 
+  group_by(ProjectName, ProjectID, Ware) %>% 
+  summarise(count = sum(Quantity))
+summary2
 
 
 #### 4. Compute new numeric date variables from original ones #### 
@@ -197,22 +197,6 @@ wareByUnitT1 <- wareByUnitT %>% dplyr::select(
   - 'American Stoneware',
   - 'Refined Earthenware, unidentifiable')
 
-#another way of doing this -- needed?
-#badVars <- c('Nottingham', 
-#             'Refined Earthenware, modern',
-#             'American Stoneware',
-#             'Refined Stoneware, unidentifiable',
-#             'Fulham Type',
-#             'Saintonge',
-#             'Astbury Type', 
-#             'White Salt Glaze',
-#             'Delftware, Dutch/British')
-
-#goodVars <- !names(wareByUnitT) %in% badVars
-#wareByUnitT1 <- wareByUnitT[,goodVars] 
-
-
-
 
 # 8.2  We may also want to enforce a sample size cut off on the MCD analysis.
 # MCDs and TPQs are more reliable with larger samples, but may be in 
@@ -226,7 +210,6 @@ wareByUnitT1 <-wareByUnitT1[wareByUnitTTotals > 5,]
 # DO  meet the sample size cutoff
 wareByUnitT2 <- wareByUnitT1[,c(T,colSums(wareByUnitT1[,-1])
                                 > 0)]
-
 
 
 
@@ -364,16 +347,15 @@ sortData<- function(unitScores,typeScores,unitData){
   return(sortedData)
 }
 
-
-WareByUnitT2Sorted<-sortData(MCDByUnit$MCDs$blueMCD,
-                             MCDByUnit$midPoints$mPoint,
-                             dataForMCD$unitData)
+unitDataSorted <- sortData(MCDByUnit$MCDs$blueMCD,
+                           MCDByUnit$midPoints$mPoint,
+                           dataForMCD$unitData)
 
 #### 11.  Make a Ford-style battleship plot  ####
 # convert to a matrix, whose cols are the counts
 # make the unit name a 'rowname" of the matrix
-Mat<-as.matrix(WareByUnitT2Sorted[,2:ncol(WareByUnitT2Sorted)])
-rownames(Mat)<-WareByUnitT2Sorted$unit
+Mat<-as.matrix(unitDataSorted[,2:ncol(unitDataSorted)])
+rownames(Mat)<-unitDataSorted$unit
 rSums<- matrix (rowSums(Mat),nrow(Mat),ncol(Mat), byrow=F)
 MatProp<-Mat/rSums
 # Do the plot
@@ -384,32 +366,30 @@ battleship.plot(MatProp,
                 ylab= 'Context',
                 col='grey')
 
-WareByUnitT2 <- dataForMCD$unitData
 
 #### 12. Now let's try some Correspondence Analysis ####
 # You need to decide if you want to use exactly the same data that
 # went into the MCD analysis (dataForMCD$unitData), or the 
 # data with all the ware types. To chose, commment out one of these two lines:
-#wareByUnitT_forCA <- wareByUnitT1 # use all the data
-wareByUnitT_forCA <- dataForMCD$unitData # use ONLY the data used for MCDs
+wareByUnitT_forCA <- wareByUnitT2 # use all the data
+#wareByUnitT_forCA <- dataForMCD$unitData # use ONLY the data used for MCDs
 
 # 12.1 USE THIS SECTION AFTER AN INITIAL CA RUN TO remove types and units from the analysis that are outliers
-
-# Remove types
-# wareByUnitT_forCA <- wareByUnitT_forCA %>% select( 
-#     - 'Nottingham', 
-#     - 'Refined Earthenware, modern',
-#     - 'American Stoneware',
-#     - 'Refined Stoneware, unidentifiable',
-#     - 'Fulham Type',
-#     - 'Saintonge',
-#     - 'Astbury Type', 
-#     - 'White Salt Glaze'
-# )
 
 # Remove units
 wareByUnitT_forCA <- wareByUnitT_forCA %>% filter(
   unit != 'F11.SG18')
+
+# When you have removed a unit check to see if any of the column totals is now 0.  If any exist you will need to 
+# remove the ware type, otherwise the CA won't run
+colSums(wareByUnitT_forCA[,-1])
+
+# Remove types
+# wareByUnitT_forCA <- wareByUnitT_forCA %>% select( 
+#     - 'Astbury Type', 
+#     - 'White Salt Glaze'
+)
+
 
 #12.2 USE THIS SECTION TO RUN THE INITIAL CA AND THEN USE AGAIN AFTER REMOVING OUTLIERS                   
 #Run the CA
@@ -462,6 +442,7 @@ p <- ggplot(data=inertia , aes(x= 1:length(Inertia), y=Inertia)) +
   theme(plot.title = element_text(hjust = 0.5))+
   geom_line(col= "cornflower blue", size=1) +
   geom_point(shape=21, size=5, colour="black", fill="cornflower blue") +
+  #make sure to update title to proper site name
   labs( title="South Pavilion", x="Dimension", y='Proportion of Inertia' ) +
   geom_line(aes(y = bs[,2], x= bs[,1]), color = "black", linetype = "dashed", 
             size=1)
@@ -542,12 +523,12 @@ rSums<- matrix (rowSums(Mat),nrow(Mat),ncol(Mat), byrow=F)
 MatProp<-Mat/rSums
 # Do the plot
 SeriationCA<-battleship.plot(MatProp,
-                mar=c(2,4,8,4),
-                cex.labels=.8,
-                main = 'Seriation by CA Dimension 1',
-                xlab='Ware Type',
-                ylab= 'Context',
-                col='grey')
+                             mar=c(2,4,8,4),
+                             cex.labels=.8,
+                             main = 'Seriation by CA Dimension 1',
+                             xlab='Ware Type',
+                             ylab= 'Context',
+                             col='grey')
 
 SeriationCA
 #save the plot for website chronology page/presentations
@@ -607,10 +588,10 @@ p5a
 #### 15.  Do the Dim 1 -  MCD scatterplot with Phase assignments  ####
 # Do the Phase assigments, based on the Dim1 scores
 # Note, depending on how many phases you have you will need to add or comment out lines and update boundaries
-CA_MCD_Phase <- CA_MCD %>% mutate(Phase = case_when (Dim1 <= -1.5 ~ 'P01',
-                                                      #(Dim1 > -.4) & 
-                                                      #(Dim1 <= -1.2) ~ 'P02',
-                                                      Dim1 > -1.5 ~ 'P02'
+CA_MCD_Phase <- CA_MCD %>% mutate(Phase = case_when (Dim1 <= 1.5 ~ 'P01',
+                                                     #(Dim1 > -.4) & 
+                                                     #(Dim1 <= -1.2) ~ 'P02',
+                                                     Dim1 > 1.5 ~ 'P02'
 ))
 
 
