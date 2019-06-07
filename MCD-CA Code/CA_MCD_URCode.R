@@ -402,7 +402,7 @@ wareByUnitT_forCA <- wareByUnitT2 # use all the data
 # wareByUnitT_forCA <- wareByUnitT_forCA %>% select( 
 #     - 'Astbury Type', 
 #     - 'White Salt Glaze'
-)
+#)
 
 
 #12.2 USE THIS SECTION TO RUN THE INITIAL CA AND THEN USE AGAIN AFTER REMOVING OUTLIERS                   
