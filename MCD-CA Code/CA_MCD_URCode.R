@@ -86,6 +86,10 @@ AllCeramicCount <- summary1 %>% summarise(Count=sum(count))
 
 #### 3. Customizations to the Ware Type dates or names####
 #3.1 For example, change beginning and end dates for French CEW to 1675-1900
+#This is optional -- The CEW types don’t have manufacturing dates so they are 
+#can be excluded from MCDs but it can be useful to include them in the CA 
+#and compare the CA order with them in and the CA order that doesn’t include them
+
 #MCDTypeTable <- MCDTypeTable %>% 
 #  mutate(BeginDate = replace(BeginDate, Ware %in% c('French Coarse Earthenware',
 #                                                    'Vallauris',
@@ -190,8 +194,17 @@ wareByUnitT <- wareTypeData_Unit %>% group_by(Ware,unit) %>%
 
 
 #### 8. Remove specific ware types (if you must) and set sample size cut off  ####
-# 8.1 It is possible at the point to drop types you do not want in the MCD computations
-# But it is not clear why one would want to do this. Here we name the types we do NOT
+# 8.1 It is possible at this point to drop types you do not want in the MCD computations
+# We do this because some types are historical types and some aren’t
+#if a type isn’t helpful in providing a chronological signal then you should take it out
+#Ex: American SW -- it has a very different function than a pearlware plate
+#and therefore its pattern of occurrence is likely to be affected, can get temporal gradiant for Dim1 (REW) vs Dim 2 that capturing is more utilitarian  
+#One thing -- we are doing this before we calculate MCDs NOT the seriation
+#Two approaches: 1) leave them in the MCD dataframe and only take them out of the CA and then when you compare CA to the MCDs (i.e. don't
+# remove them here,
+#2) If you take them out here you will be doing the MCD CA comparison on the same dataset without the ware types
+
+# Here we name the types we do NOT
 # want included (NOTE: You will need to add the types that are particular to your site to the select function):
 wareByUnitT1 <- wareByUnitT %>% dplyr::select( 
   - 'American Stoneware',
@@ -370,19 +383,20 @@ battleship.plot(MatProp,
 #### 12. Now let's try some Correspondence Analysis ####
 # You need to decide if you want to use exactly the same data that
 # went into the MCD analysis (dataForMCD$unitData), or the 
-# data with all the ware types. To chose, commment out one of these two lines:
+# data with all the ware types (e.g. if you want to include CEWs/ware types that don’t have dates).
+# To chose, commment out one of these two lines:
 wareByUnitT_forCA <- wareByUnitT2 # use all the data
 #wareByUnitT_forCA <- dataForMCD$unitData # use ONLY the data used for MCDs
 
 # 12.1 USE THIS SECTION AFTER AN INITIAL CA RUN TO remove types and units from the analysis that are outliers
 
 # Remove units
-wareByUnitT_forCA <- wareByUnitT_forCA %>% filter(
-  unit != 'F11.SG18')
+#wareByUnitT_forCA <- wareByUnitT_forCA %>% filter(
+#  unit != 'F11.SG18')
 
 # When you have removed a unit check to see if any of the column totals is now 0.  If any exist you will need to 
 # remove the ware type, otherwise the CA won't run
-colSums(wareByUnitT_forCA[,-1])
+#colSums(wareByUnitT_forCA[,-1])
 
 # Remove types
 # wareByUnitT_forCA <- wareByUnitT_forCA %>% select( 
@@ -412,6 +426,8 @@ colScores <- data.frame(ca1$colcoord[,1:5], type =ca1$colnames)
 # If the inertia values returned by the CA function are showing Dim 1 is capturing significant variation then Dim 1 values from CA 
 # will be higher than Dim 1 values from BS and Dim 2 values will be lower than values from BS
 # If Dim1 and Dim2 are significant CA, values in CA for both dimensions will be higher than both values in BS.
+# One piece of evidence that’s helping you evaluate whether patterning is real 
+# see https://rdrr.io/rforge/PCDimension/man/brokenStick.html for more information on the broken stick model
 
 broken.stick <- function(p)
   # Compute the expected values of the broken-stick distribution for 'p' pieces.
@@ -453,6 +469,10 @@ p
 
 
 # 12.4 plots of row and column scores for Dim 1 vs. Dim 2 and Dim 1 vs. Dim 3 
+# We are looking to see if Dim1 captures time, keep in mind that time may reside in two dimensions 
+# and you may be better off looking for clusters in the Dim1Dim2 scatterplot, removing outliers and running again.
+# It is an iterative process
+
 # ggplot version of row scores dim 1 and dim 2
 library(ggrepel)
 set.seed(42)
