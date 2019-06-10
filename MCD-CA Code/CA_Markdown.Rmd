@@ -37,13 +37,7 @@ library(ggrepel)
 - Link to file with database password
 
 ```{r connect to drc, include=FALSE}
-
-# tell DBI which driver to use
-pgSQL <- dbDriver("PostgreSQL")
-# establish the connection
-DRCcon<-dbConnect(pgSQL, host='drc.iath.virginia.edu', port='5432',
-                  dbname='daacs-production',
-                  user='drcquery', password='!queryacct!')
+source("credentials.R")
 ```
 
 ### 1. Get table ware type date ranges table
