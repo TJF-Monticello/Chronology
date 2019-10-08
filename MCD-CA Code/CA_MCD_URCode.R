@@ -174,8 +174,8 @@ wareTypeData_Unit <- wareTypeData %>%
 ## 6.3 Use this to assign Quadrat to the unit. 
 #wareTypeData_Unit <- wareTypeData %>%  
 #mutate(unit = case_when(
-#QuadratID == "" ~ paste(Context)
-##QuadratID != "" ~ paste(QuadratID)
+#QuadratID == "" ~ paste(Context),
+##QuadratID != "" ~ paste(QuadratID)))
 
 ## 6.4 Use this to assign Quadrat and Context to the unit.
 #wareTypeData_Unit <- wareTypeData %>% 
