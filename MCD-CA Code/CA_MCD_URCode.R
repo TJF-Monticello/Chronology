@@ -378,8 +378,16 @@ battleship.plot(MatProp,
                 xlab='Ware Type',
                 ylab= 'Context',
                 col='grey')
-
-
+#save plot
+png(file="BattleshipPlot.png",
+    width=1000, height=630)
+battleship.plot(MatProp,
+                mar=c(2,6,10,1),
+                main = 'Seriation by Blue MCD',
+                xlab='Ware Type',
+                ylab= 'Context',
+                col='grey')
+dev.off()
 #### 12. Now let's try some Correspondence Analysis ####
 # You need to decide if you want to use exactly the same data that
 # went into the MCD analysis (dataForMCD$unitData), or the 
@@ -542,15 +550,25 @@ rownames(Mat)<-wareByUnitT_Sorted$unit
 rSums<- matrix (rowSums(Mat),nrow(Mat),ncol(Mat), byrow=F)
 MatProp<-Mat/rSums
 # Do the plot
-SeriationCA<-battleship.plot(MatProp,
+battleship.plot(MatProp,
                              mar=c(2,4,8,4),
                              cex.labels=.8,
                              main = 'Seriation by CA Dimension 1',
                              xlab='Ware Type',
                              ylab= 'Context',
                              col='grey')
+#save the plot
+png(file="SeriationCA.png",
+    width=1000, height=630)
+battleship.plot(MatProp,
+                             mar=c(2,4,8,4),
+                             cex.labels=.8,
+                             main = 'Seriation by CA Dimension 1',
+                             xlab='Ware Type',
+                             ylab= 'Context',
+                             col='grey')
+dev.off()
 
-SeriationCA
 #save the plot for website chronology page/presentations
 #ggsave("SouthPav_SeriationCADim1_2018cxt.png", p2, width=10, height=7.5, dpi=300)
 
