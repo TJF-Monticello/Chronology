@@ -1,4 +1,4 @@
-# wareTypeCAandMCD.R
+# MCD-CA Code.R
 # Created by:  FDN  8.5.2014
 # Last update: FDN 8.5.2014  
 # Edited by:   LAB 1.17.2017 for Morne Patate
